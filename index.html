@@ -517,7 +517,7 @@ async function updateStatus(jobId, newStatus) {
     item.job.status = newStatus;
     item.job.updatedAt = new Date().toISOString();
     item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
-    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+    await apiPost('update','Quotations', item.q.id||item.q.ID||item.q.Title, {
       DealStatus: JSON.stringify(item.ds)
     });
     const st = TECH_STATUS[newStatus];
@@ -544,7 +544,7 @@ async function uploadPhotos(jobId, input) {
       item.job.completionPhotos.push(url);
     }
     item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
-    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+    await apiPost('update','Quotations', item.q.id||item.q.ID||item.q.Title, {
       DealStatus: JSON.stringify(item.ds)
     });
     toast('✅ อัปโหลดรูปสำเร็จ '+files.length+' รูป', 'success');
@@ -593,7 +593,7 @@ async function addExpense(jobId) {
   delete _pendingReceipt[jobId];
   item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
   try {
-    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+    await apiPost('update','Quotations', item.q.id||item.q.ID||item.q.Title, {
       DealStatus: JSON.stringify(item.ds)
     });
     toast('✅ บันทึกค่าใช้จ่ายแล้ว', 'success');
@@ -611,7 +611,7 @@ async function deleteExpense(jobId, expId) {
   item.job.expenses = (item.job.expenses||[]).filter(e => e.id !== expId);
   item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
   try {
-    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+    await apiPost('update','Quotations', item.q.id||item.q.ID||item.q.Title, {
       DealStatus: JSON.stringify(item.ds)
     });
     toast('ลบแล้ว', 'success');
