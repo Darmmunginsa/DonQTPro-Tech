@@ -502,7 +502,7 @@ async function updateStatus(jobId, newStatus) {
   const btn = document.getElementById('status-btn-'+jobId);
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
   try {
-    const item = allJobs.find(j => j.job.id === jobId);
+    const item = allJobs.find(j => String(j.job.id) === String(jobId));
     if (!item) throw new Error('ไม่พบข้อมูลงาน');
     item.job.status = newStatus;
     item.job.updatedAt = new Date().toISOString();
@@ -523,7 +523,7 @@ async function updateStatus(jobId, newStatus) {
 async function uploadPhotos(jobId, input) {
   const files = Array.from(input.files);
   if (!files.length) return;
-  const item = allJobs.find(j => j.job.id === jobId);
+  const item = allJobs.find(j => String(j.job.id) === String(jobId));
   if (!item) return;
   toast('กำลังอัปโหลด ' + files.length + ' รูป...', 'info');
   try {
@@ -546,7 +546,7 @@ async function uploadPhotos(jobId, input) {
 
 // ── EXPENSE RECEIPT UPLOAD ───────────────────────────────────────────────────
 let _pendingReceipt = {};
-async function uploadReceipt(jobId, input) {
+async function uploadReceipt(jobId, input) {  // jobId may be string from onclick
   const file = input.files[0];
   if (!file) return;
   const label = document.getElementById('exp-receipt-label-'+jobId);
@@ -568,7 +568,7 @@ async function addExpense(jobId) {
   const amt = parseFloat(document.getElementById('exp-amt-'+jobId)?.value || '0');
   const desc = document.getElementById('exp-desc-'+jobId)?.value?.trim() || '';
   if (!amt || amt <= 0) { toast('กรุณาระบุจำนวนเงิน', 'error'); return; }
-  const item = allJobs.find(j => j.job.id === jobId);
+  const item = allJobs.find(j => String(j.job.id) === String(jobId));
   if (!item) return;
   const exp = {
     id: 'exp_' + Date.now(),
@@ -596,7 +596,7 @@ async function addExpense(jobId) {
 // ── DELETE EXPENSE ────────────────────────────────────────────────────────────
 async function deleteExpense(jobId, expId) {
   if (!confirm('ลบรายการนี้?')) return;
-  const item = allJobs.find(j => j.job.id === jobId);
+  const item = allJobs.find(j => String(j.job.id) === String(jobId));
   if (!item) return;
   item.job.expenses = (item.job.expenses||[]).filter(e => e.id !== expId);
   item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
