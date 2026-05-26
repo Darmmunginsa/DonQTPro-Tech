@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>QuotePro Tech Portal</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--card:#1a1d27;--card2:#20243a;--accent:#6c63ff;--accent2:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--border:#2d3748;--font:'Segoe UI',system-ui,sans-serif;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+
+/* ── LOGIN ── */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:24px;padding:20px}
+.login-logo{font-size:48px}
+.login-title{font-size:24px;font-weight:700;color:var(--accent2)}
+.login-sub{color:var(--muted);font-size:14px;text-align:center}
+#g-signin-btn{margin-top:8px}
+
+/* ── APP ── */
+#app-screen{display:none;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{font-size:20px}
+.topbar-title{font-weight:700;font-size:15px;color:var(--accent2)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--accent)}
+.user-name{font-size:12px;color:var(--muted)}
+.btn-logout{background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+
+/* ── FILTER BAR ── */
+.filter-bar{padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;background:var(--card);border-bottom:1px solid var(--border)}
+.filter-chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);transition:all .15s}
+.filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.sync-btn{margin-left:auto;padding:5px 12px;border-radius:8px;font-size:12px;background:var(--card2);border:1px solid var(--border);color:var(--text);cursor:pointer}
+.sync-btn:hover{border-color:var(--accent)}
+
+/* ── JOB LIST ── */
+.job-list{padding:16px;display:flex;flex-direction:column;gap:12px;max-width:720px;margin:0 auto}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+
+/* ── JOB CARD ── */
+.job-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s}
+.job-card:hover{border-color:var(--accent)}
+.job-header{padding:14px 16px;display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.job-icon{font-size:24px;flex-shrink:0;margin-top:2px}
+.job-info{flex:1;min-width:0}
+.job-quote-id{font-size:11px;color:var(--accent2);font-weight:600;margin-bottom:2px}
+.job-customer{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+.job-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.job-expand-icon{color:var(--muted);font-size:14px;transition:transform .2s;flex-shrink:0;margin-top:4px}
+.job-card.expanded .job-expand-icon{transform:rotate(180deg)}
+
+/* ── JOB BODY ── */
+.job-body{display:none;border-top:1px solid var(--border);padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.job-card.expanded .job-body{display:flex}
+.detail-row{display:flex;gap:8px;align-items:flex-start}
+.detail-label{font-size:11px;color:var(--muted);min-width:100px;padding-top:2px}
+.detail-value{font-size:13px;flex:1}
+.detail-value a{color:var(--accent2);text-decoration:none}
+.detail-value a:hover{text-decoration:underline}
+
+/* ── STATUS ACTIONS ── */
+.status-section{background:var(--card2);border-radius:8px;padding:12px}
+.section-title{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.status-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.status-step{font-size:11px;display:flex;align-items:center;gap:4px}
+.status-step.done{color:var(--success)}
+.status-step.current{color:var(--accent2);font-weight:700}
+.status-step.pending-step{color:var(--muted)}
+.status-arrow{color:var(--muted);font-size:10px}
+.action-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--font)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5b52e0}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#0da371}
+.btn-warning{background:var(--warning);color:#000}
+.btn-warning:hover{background:#e08900}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── PHOTO UPLOAD ── */
+.photo-section{background:var(--card2);border-radius:8px;padding:12px}
+.photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.photo-thumb{width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+.upload-box{border:2px dashed var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer;font-size:12px;color:var(--muted);transition:border-color .2s}
+.upload-box:hover{border-color:var(--accent);color:var(--accent2)}
+input[type=file]{display:none}
+
+/* ── EXPENSES ── */
+.expense-section{background:var(--card2);border-radius:8px;padding:12px}
+.expense-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.expense-item{background:var(--card);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12px}
+.expense-cat{padding:2px 6px;border-radius:4px;background:var(--accent);color:#fff;font-size:10px;font-weight:600;flex-shrink:0}
+.expense-desc{flex:1;color:var(--muted)}
+.expense-amount{font-weight:600;color:var(--accent2);flex-shrink:0}
+.expense-del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0 2px}
+.expense-receipt{color:var(--muted);font-size:10px;flex-shrink:0}
+.expense-receipt a{color:var(--accent2);text-decoration:none}
+.add-expense-form{background:var(--card);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.form-row{display:flex;gap:8px;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px}
+.form-group label{font-size:11px;color:var(--muted)}
+.form-control{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:var(--font);width:100%}
+.form-control:focus{outline:none;border-color:var(--accent)}
+select.form-control option{background:var(--card)}
+.expense-total{font-size:13px;font-weight:700;color:var(--accent2);text-align:right;margin-top:4px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast-msg{padding:10px 16px;border-radius:8px;font-size:13px;color:#fff;animation:fadein .2s ease;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.toast-msg.success{background:var(--success)}
+.toast-msg.error{background:var(--danger)}
+.toast-msg.info{background:var(--info)}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── LOADING ── */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--muted);gap:10px}
+
+@media(max-width:480px){
+  .detail-label{min-width:80px}
+  .job-meta{gap:6px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">🔧</div>
+  <div class="login-title">QuotePro Tech Portal</div>
+  <div class="login-sub">พอร์ทัลสำหรับช่างติดตั้ง<br>ดูงาน อัปเดตสถานะ และบันทึกค่าใช้จ่าย</div>
+  <div id="g-signin-btn"></div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">🔧</div>
+      <div class="topbar-title">Tech Portal</div>
+    </div>
+    <div class="topbar-right">
+      <img id="user-avatar" class="user-avatar" src="" alt="" onerror="this.style.display='none'"/>
+      <span id="user-name" class="user-name"></span>
+      <button class="btn-logout" onclick="signOut()">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">ทั้งหมด</button>
+    <button class="filter-chip" data-filter="assigned" onclick="setFilter('assigned',this)">⏳ รอยืนยัน</button>
+    <button class="filter-chip" data-filter="accepted" onclick="setFilter('accepted',this)">✅ ยืนยันแล้ว</button>
+    <button class="filter-chip" data-filter="inprogress" onclick="setFilter('inprogress',this)">🔨 กำลังทำ</button>
+    <button class="filter-chip" data-filter="completed" onclick="setFilter('completed',this)">🏁 เสร็จแล้ว</button>
+    <button class="sync-btn" onclick="loadJobs()">🔄 รีเฟรช</button>
+  </div>
+
+  <div class="job-list" id="job-list">
+    <div class="loading-screen" style="min-height:200px">
+      <div class="spinner"></div> กำลังโหลด...
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const API_URL = 'https://script.google.com/macros/s/AKfycby71AcxEY4mtMkuRn0SpZ2nxoBMGg_j6aWJhSX4j1KFvJw9_QoH_X6kvQAobxMp_goRhQ/exec';
+const GOOGLE_CLIENT_ID = '843295487386-o5b8mn63lj23djpfhf50q9a0b7a4kbs8.apps.googleusercontent.com'; // same as main app
+
+const TECH_STATUS = {
+  assigned:   { label:'รอยืนยัน',   icon:'⏳', color:'#f59e0b', next:'accepted',   nextLabel:'✅ ยืนยันรับงาน' },
+  accepted:   { label:'ยืนยันแล้ว', icon:'✅', color:'#3b82f6', next:'inprogress', nextLabel:'🔨 เริ่มงาน' },
+  inprogress: { label:'กำลังทำ',    icon:'🔨', color:'#6c63ff', next:'completed',  nextLabel:'🏁 ทำเสร็จแล้ว' },
+  completed:  { label:'เสร็จแล้ว',  icon:'🏁', color:'#10b981', next:null,         nextLabel:null }
+};
+
+const EXPENSE_CATS = ['ค่าเดินทาง','ค่าอาหาร','วัสดุสิ้นเปลือง','ค่าแรงเสริม','ค่าอื่นๆ'];
+
+let currentUser = null;
+let allJobs = [];       // [{quoteId, quoteTitle, customer, dealStatus, job}]
+let currentFilter = 'all';
+let uploading = {};     // jobId → true/false
+
+// ── AUTH ────────────────────────────────────────────────────────────────────
+window.onload = function() {
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleCredential,
+    auto_select: false
+  });
+  google.accounts.id.renderButton(document.getElementById('g-signin-btn'), {
+    theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'rectangular',
+    locale: 'th'
+  });
+
+  // Try auto-login from stored session
+  const stored = (() => { try { return JSON.parse(localStorage.getItem('tech_user')||'null'); } catch(e){return null;} })();
+  if (stored && stored.email) {
+    currentUser = stored;
+    showApp();
+    loadJobs();
+  }
+};
+
+function handleCredential(response) {
+  try {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    currentUser = {
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture
+    };
+    localStorage.setItem('tech_user', JSON.stringify(currentUser));
+    showApp();
+    loadJobs();
+  } catch(e) {
+    toast('เข้าสู่ระบบไม่สำเร็จ','error');
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
+  const av = document.getElementById('user-avatar');
+  if (currentUser.picture) av.src = currentUser.picture;
+}
+
+function signOut() {
+  localStorage.removeItem('tech_user');
+  currentUser = null;
+  allJobs = [];
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+  google.accounts.id.disableAutoSelect();
+}
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function apiGet(sheetName) {
+  const url = API_URL + '?sheet=' + encodeURIComponent(sheetName);
+  const res = await fetch(url);
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json.data || [];
+}
+
+async function apiPost(action, sheetName, id, data) {
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action, sheetName, id, data })
+  });
+  const json = await res.json();
+  if (!json.success && json.error) throw new Error(json.error);
+  return json;
+}
+
+async function apiUpload(fileData, fileName, mimeType, sheetName) {
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action:'uploadFile', sheetName: sheetName||'Quotations',
+      fileData, fileName, mimeType
+    })
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error||'Upload failed');
+  return json.url;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve,reject) => {
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// ── LOAD JOBS ────────────────────────────────────────────────────────────────
+async function loadJobs() {
+  document.getElementById('job-list').innerHTML =
+    '<div class="loading-screen" style="min-height:200px"><div class="spinner"></div> กำลังโหลด...</div>';
+  try {
+    const quotes = await apiGet('Quotations');
+    allJobs = [];
+    for (const q of quotes) {
+      let ds = {};
+      try { ds = JSON.parse(q.DealStatus || '{}'); } catch(e) {}
+      const jobs = ds.techJobs || [];
+      for (const job of jobs) {
+        if ((job.techEmail||'').toLowerCase() === (currentUser.email||'').toLowerCase()) {
+          allJobs.push({ quoteId:q.ID||q.Title, quoteTitle:q.Title||q.ID, customer:q.CustName||q.CustomerName||'', q, ds, job });
+        }
+      }
+    }
+    // Sort: incomplete first, then by scheduledAt desc
+    allJobs.sort((a,b) => {
+      const order = {assigned:0,accepted:1,inprogress:2,completed:3};
+      const diff = (order[a.job.status]||0) - (order[b.job.status]||0);
+      if (diff !== 0) return diff;
+      return (b.job.scheduledAt||'').localeCompare(a.job.scheduledAt||'');
+    });
+    renderJobList();
+  } catch(e) {
+    document.getElementById('job-list').innerHTML =
+      '<div class="empty-state"><div class="icon">⚠️</div><div>โหลดข้อมูลไม่สำเร็จ<br><small>'+e.message+'</small></div></div>';
+  }
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderJobList();
+}
+
+function renderJobList() {
+  const list = document.getElementById('job-list');
+  const filtered = currentFilter === 'all'
+    ? allJobs
+    : allJobs.filter(j => j.job.status === currentFilter);
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">🔧</div><div>' +
+      (allJobs.length === 0 ? 'ยังไม่มีงานที่ได้รับมอบหมาย' : 'ไม่มีงานในหมวดนี้') + '</div></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(item => renderJobCard(item)).join('');
+}
+
+function renderJobCard(item) {
+  const { quoteId, quoteTitle, customer, job } = item;
+  const st = TECH_STATUS[job.status] || TECH_STATUS.assigned;
+  const badge = `<span class="job-badge" style="background:${st.color}22;color:${st.color}">${st.icon} ${st.label}</span>`;
+
+  const sched = job.scheduledAt ? '📅 ' + fmtDT(job.scheduledAt) : '';
+  const contact = (job.contactName||job.contactPhone) ?
+    '👤 ' + [job.contactName, job.contactPhone].filter(Boolean).join(' ') : '';
+
+  const expTotal = (job.expenses||[]).reduce((s,e) => s + (parseFloat(e.amount)||0), 0);
+
+  return `<div class="job-card" id="card-${job.id}">
+    <div class="job-header" onclick="toggleCard('${job.id}')">
+      <div class="job-icon">${st.icon}</div>
+      <div class="job-info">
+        <div class="job-quote-id">${quoteTitle}</div>
+        <div class="job-customer">${customer || '(ไม่มีชื่อลูกค้า)'}</div>
+        <div class="job-meta">
+          ${badge}
+          ${sched ? '<span>'+sched+'</span>' : ''}
+          ${contact ? '<span>'+contact+'</span>' : ''}
+          ${expTotal > 0 ? '<span>💰 '+fmtMoney(expTotal)+'</span>' : ''}
+        </div>
+      </div>
+      <div class="job-expand-icon">▼</div>
+    </div>
+    <div class="job-body" style="display:none">
+      ${renderJobBody(item)}
+    </div>
+  </div>`;
+}
+
+function renderJobBody(item) {
+  const { quoteId, quoteTitle, customer, q, job } = item;
+  const st = TECH_STATUS[job.status] || TECH_STATUS.assigned;
+
+  // Details
+  const details = [
+    ['ลูกค้า', customer],
+    ['ใบเสนอราคา', quoteTitle],
+    ['ผู้ติดต่อ', job.contactName || '-'],
+    ['โทรศัพท์', job.contactPhone ? `<a href="tel:${job.contactPhone}">${job.contactPhone}</a>` : '-'],
+    ['วันเวลาเข้างาน', job.scheduledAt ? fmtDT(job.scheduledAt) : '-'],
+    ['แผนที่', job.mapUrl ? `<a href="${job.mapUrl}" target="_blank">🗺️ เปิดแผนที่</a>` : '-'],
+    ['วัสดุ/อุปกรณ์', job.materials || '-'],
+    ['หมายเหตุ', job.note || '-']
+  ].filter(([,v]) => v && v !== '-');
+
+  const detailsHtml = details.map(([l,v]) =>
+    `<div class="detail-row"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`
+  ).join('');
+
+  // Status flow
+  const steps = ['assigned','accepted','inprogress','completed'];
+  const stepIdx = steps.indexOf(job.status);
+  const flowHtml = steps.map((s,i) => {
+    const ts = TECH_STATUS[s];
+    const cls = i < stepIdx ? 'done' : i === stepIdx ? 'current' : 'pending-step';
+    return `<span class="status-step ${cls}">${ts.icon} ${ts.label}</span>${i<3?'<span class="status-arrow">→</span>':''}`;
+  }).join('');
+
+  // Next action button
+  const nextBtn = st.next ?
+    `<button class="btn btn-primary" onclick="updateStatus('${job.id}','${st.next}')" id="status-btn-${job.id}">
+      ${st.nextLabel}
+    </button>` : '';
+
+  // Photos
+  const photos = (job.completionPhotos||[]);
+  const photosHtml = photos.map(u =>
+    `<a href="${u}" target="_blank"><img class="photo-thumb" src="${u}" onerror="this.style.display='none'"/></a>`
+  ).join('');
+
+  // Expenses
+  const expenses = job.expenses || [];
+  const expTotal = expenses.reduce((s,e) => s + (parseFloat(e.amount)||0), 0);
+  const expListHtml = expenses.map(e => `
+    <div class="expense-item">
+      <span class="expense-cat">${e.category||'-'}</span>
+      <span class="expense-desc">${e.desc||''}</span>
+      <span class="expense-receipt">${e.receiptUrl ? '<a href="'+e.receiptUrl+'" target="_blank">ใบเสร็จ</a>' : ''}</span>
+      <span class="expense-amount">${fmtMoney(e.amount||0)}</span>
+      <button class="expense-del" onclick="deleteExpense('${job.id}','${e.id}')" title="ลบ">✕</button>
+    </div>`).join('');
+
+  return `
+    ${detailsHtml}
+
+    <div class="status-section">
+      <div class="section-title">สถานะงาน</div>
+      <div class="status-flow">${flowHtml}</div>
+      <div class="action-btns">${nextBtn}</div>
+    </div>
+
+    <div class="photo-section">
+      <div class="section-title">รูปหลังงาน (${photos.length} รูป)</div>
+      <div class="photo-grid">${photosHtml}</div>
+      <label class="upload-box" style="margin-top:${photos.length?'8px':'0'};display:block">
+        📷 แตะเพื่ออัปโหลดรูป
+        <input type="file" accept="image/*" multiple onchange="uploadPhotos('${job.id}',this)"/>
+      </label>
+    </div>
+
+    <div class="expense-section">
+      <div class="section-title">ค่าใช้จ่ายในงาน</div>
+      <div class="expense-list" id="exp-list-${job.id}">${expListHtml}</div>
+      ${expTotal > 0 ? `<div class="expense-total">รวม ${fmtMoney(expTotal)}</div>` : ''}
+      <div class="add-expense-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>หมวดหมู่</label>
+            <select class="form-control" id="exp-cat-${job.id}">
+              ${EXPENSE_CATS.map(c=>`<option>${c}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>จำนวนเงิน (บาท)</label>
+            <input type="number" class="form-control" id="exp-amt-${job.id}" placeholder="0" min="0" step="0.01"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>รายละเอียด</label>
+          <input type="text" class="form-control" id="exp-desc-${job.id}" placeholder="เช่น น้ำมัน, ข้าวกล่อง 2 ชุด..."/>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-success btn-sm" onclick="addExpense('${job.id}')">+ เพิ่มรายการ</button>
+          <label class="btn btn-outline btn-sm" style="cursor:pointer">
+            📎 แนบใบเสร็จ
+            <input type="file" accept="image/*,application/pdf" onchange="uploadReceipt('${job.id}',this)" style="display:none"/>
+          </label>
+          <span id="exp-receipt-label-${job.id}" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleCard(jobId) {
+  const card = document.getElementById('card-'+jobId);
+  if (!card) return;
+  const isExp = card.classList.contains('expanded');
+  // collapse all
+  document.querySelectorAll('.job-card.expanded').forEach(c => {
+    c.classList.remove('expanded');
+    c.querySelector('.job-body').style.display = 'none';
+  });
+  if (!isExp) {
+    card.classList.add('expanded');
+    card.querySelector('.job-body').style.display = 'flex';
+  }
+}
+
+// ── STATUS UPDATE ────────────────────────────────────────────────────────────
+async function updateStatus(jobId, newStatus) {
+  const btn = document.getElementById('status-btn-'+jobId);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+  try {
+    const item = allJobs.find(j => j.job.id === jobId);
+    if (!item) throw new Error('ไม่พบข้อมูลงาน');
+    item.job.status = newStatus;
+    item.job.updatedAt = new Date().toISOString();
+    item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
+    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+      DealStatus: JSON.stringify(item.ds)
+    });
+    const st = TECH_STATUS[newStatus];
+    toast(st.icon + ' อัปเดตสถานะ: ' + st.label, 'success');
+    renderJobList();
+  } catch(e) {
+    toast('ไม่สำเร็จ: '+e.message, 'error');
+    if (btn) { btn.disabled = false; btn.innerHTML = TECH_STATUS[newStatus]?.nextLabel||''; }
+  }
+}
+
+// ── PHOTO UPLOAD ─────────────────────────────────────────────────────────────
+async function uploadPhotos(jobId, input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const item = allJobs.find(j => j.job.id === jobId);
+  if (!item) return;
+  toast('กำลังอัปโหลด ' + files.length + ' รูป...', 'info');
+  try {
+    for (const file of files) {
+      const b64 = await fileToBase64(file);
+      const url = await apiUpload(b64, file.name, file.type, 'Quotations');
+      item.job.completionPhotos = item.job.completionPhotos || [];
+      item.job.completionPhotos.push(url);
+    }
+    item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
+    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+      DealStatus: JSON.stringify(item.ds)
+    });
+    toast('✅ อัปโหลดรูปสำเร็จ '+files.length+' รูป', 'success');
+    renderJobList();
+  } catch(e) {
+    toast('อัปโหลดไม่สำเร็จ: '+e.message, 'error');
+  }
+}
+
+// ── EXPENSE RECEIPT UPLOAD ───────────────────────────────────────────────────
+let _pendingReceipt = {};
+async function uploadReceipt(jobId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const label = document.getElementById('exp-receipt-label-'+jobId);
+  if (label) label.textContent = '⏳ กำลังอัปโหลด...';
+  try {
+    const b64 = await fileToBase64(file);
+    const url = await apiUpload(b64, file.name, file.type, 'Quotations');
+    _pendingReceipt[jobId] = url;
+    if (label) label.innerHTML = '<a href="'+url+'" target="_blank">✅ '+file.name+'</a>';
+  } catch(e) {
+    if (label) label.textContent = '❌ อัปโหลดไม่สำเร็จ';
+    toast('อัปโหลดใบเสร็จไม่สำเร็จ', 'error');
+  }
+}
+
+// ── ADD EXPENSE ───────────────────────────────────────────────────────────────
+async function addExpense(jobId) {
+  const cat = document.getElementById('exp-cat-'+jobId)?.value || '';
+  const amt = parseFloat(document.getElementById('exp-amt-'+jobId)?.value || '0');
+  const desc = document.getElementById('exp-desc-'+jobId)?.value?.trim() || '';
+  if (!amt || amt <= 0) { toast('กรุณาระบุจำนวนเงิน', 'error'); return; }
+  const item = allJobs.find(j => j.job.id === jobId);
+  if (!item) return;
+  const exp = {
+    id: 'exp_' + Date.now(),
+    category: cat,
+    desc,
+    amount: amt,
+    receiptUrl: _pendingReceipt[jobId] || '',
+    addedAt: new Date().toISOString()
+  };
+  item.job.expenses = item.job.expenses || [];
+  item.job.expenses.push(exp);
+  delete _pendingReceipt[jobId];
+  item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
+  try {
+    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+      DealStatus: JSON.stringify(item.ds)
+    });
+    toast('✅ บันทึกค่าใช้จ่ายแล้ว', 'success');
+    renderJobList();
+  } catch(e) {
+    toast('บันทึกไม่สำเร็จ: '+e.message, 'error');
+  }
+}
+
+// ── DELETE EXPENSE ────────────────────────────────────────────────────────────
+async function deleteExpense(jobId, expId) {
+  if (!confirm('ลบรายการนี้?')) return;
+  const item = allJobs.find(j => j.job.id === jobId);
+  if (!item) return;
+  item.job.expenses = (item.job.expenses||[]).filter(e => e.id !== expId);
+  item.ds.techJobs = (item.ds.techJobs||[]).map(j => j.id===jobId ? item.job : j);
+  try {
+    await apiPost('updateItem','Quotations', item.q.ID||item.q.Title, {
+      DealStatus: JSON.stringify(item.ds)
+    });
+    toast('ลบแล้ว', 'success');
+    renderJobList();
+  } catch(e) {
+    toast('ลบไม่สำเร็จ: '+e.message, 'error');
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmtDT(ts) {
+  if (!ts) return '';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'}) + ' ' +
+           d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  } catch(e){ return ts; }
+}
+
+function fmtMoney(n) {
+  return Number(n).toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:2}) + ' บาท';
+}
+
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-msg ' + type;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+</script>
+</body>
+</html>
