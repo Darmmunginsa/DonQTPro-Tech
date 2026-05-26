@@ -252,35 +252,45 @@ function signOut() {
 
 // ── API ──────────────────────────────────────────────────────────────────────
 async function apiGet(sheetName) {
-  const url = API_URL + '?sheet=' + encodeURIComponent(sheetName);
-  const res = await fetch(url);
+  const url = API_URL + '?action=list&sheet=' + encodeURIComponent(sheetName);
+  const res = await fetch(url, { redirect: 'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
   if (json.error) throw new Error(json.error);
   return json.data || [];
 }
 
 async function apiPost(action, sheetName, id, data) {
+  const payload = { action, sheet: sheetName };
+  if (id !== null && id !== undefined) payload.id = id;
+  if (data) payload.data = data;
   const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ action, sheetName, id, data })
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+    redirect: 'follow'
   });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
-  if (!json.success && json.error) throw new Error(json.error);
+  if (json.error) throw new Error(json.error);
   return json;
 }
 
 async function apiUpload(fileData, fileName, mimeType, sheetName) {
+  const payload = {
+    action: 'uploadFile',
+    sheet: sheetName || 'Quotations',
+    data: { fileData, fileName, mimeType }
+  };
   const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      action:'uploadFile', sheetName: sheetName||'Quotations',
-      fileData, fileName, mimeType
-    })
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+    redirect: 'follow'
   });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
-  if (!json.success) throw new Error(json.error||'Upload failed');
+  if (!json.success) throw new Error(json.error || 'Upload failed');
   return json.url;
 }
 
