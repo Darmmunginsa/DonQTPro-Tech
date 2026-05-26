@@ -306,7 +306,7 @@ async function loadJobs() {
       const jobs = ds.techJobs || [];
       for (const job of jobs) {
         if ((job.techEmail||'').toLowerCase() === (currentUser.email||'').toLowerCase()) {
-          allJobs.push({ quoteId:q.ID||q.Title, quoteTitle:q.Title||q.ID, customer:q.CustName||q.CustomerName||'', q, ds, job });
+          allJobs.push({ quoteId:q.ID||q.Title, quoteTitle:q.Title||q.ID, customer:q.ClientName||q.CustName||q.CustomerName||'', q, ds, job });
         }
       }
     }
